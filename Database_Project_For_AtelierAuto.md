@@ -30,7 +30,6 @@ The tables are connected in the following way:
 
 **CREATE TABLE:**
 
-```sql
 CREATE TABLE Clienti (
   id_client INT AUTO_INCREMENT PRIMARY KEY,
   nume VARCHAR(100),
@@ -47,14 +46,54 @@ CREATE TABLE Masini (
   id_client INT,
   FOREIGN KEY (id_client) REFERENCES Clienti(id_client)
 );
--- și așa mai departe cu restul tabelelor...
-```
 
-**ALTER TABLE:**
-```sql
-ALTER TABLE Clienti ADD cnp CHAR(13);
+CREATE TABLE Reparatii (
+  id_reparatie INT AUTO_INCREMENT PRIMARY KEY,
+  descriere VARCHAR(200),
+  cost DOUBLE,
+  id_masina INT,
+  FOREIGN KEY (id_masina) REFERENCES Masini(id_masina)
+);
+
+CREATE TABLE Piese (
+  id_piesa INT AUTO_INCREMENT PRIMARY KEY,
+  nume_piesa VARCHAR(100),
+  pret DECIMAL(10,2)
+);
+
+CREATE TABLE Reparatii_Piese (
+  id_reparatie INT,
+  id_piesa INT,
+  PRIMARY KEY (id_reparatie, id_piesa),
+  FOREIGN KEY (id_reparatie) REFERENCES Reparatii(id_reparatie),
+  FOREIGN KEY (id_piesa) REFERENCES Piese(id_piesa)
+);
+
+CREATE TABLE Mecanici (
+  id_mecanic INT AUTO_INCREMENT PRIMARY KEY,
+  nume VARCHAR(100),
+  experienta INT
+);
+
+CREATE TABLE Mecanici_Reparatii (
+  id_mecanic INT,
+  id_reparatie INT,
+  PRIMARY KEY (id_mecanic, id_reparatie),
+  FOREIGN KEY (id_mecanic) REFERENCES Mecanici(id_mecanic),
+  FOREIGN KEY (id_reparatie) REFERENCES Reparatii(id_reparatie)
+);
+
+CREATE TABLE Permise (
+  id_client INT PRIMARY KEY,
+  nr_permis VARCHAR(20),
+  categorie VARCHAR(5),
+  FOREIGN KEY (id_client) REFERENCES Clienti(id_client)
+);
+
+-- ALTER
 ALTER TABLE Reparatii MODIFY cost DOUBLE;
-```
+ALTER TABLE Clienti DROP COLUMN adresa;
+
 
 **DROP, TRUNCATE:**
 ```sql
@@ -66,59 +105,41 @@ TRUNCATE TABLE Mecanici;
 
 ### DML (Data Manipulation Language)
 
-**INSERT implicite:**
-```sql
-INSERT INTO Clienti VALUES (NULL, 'Trif Cristian', '1234567890123', '0721111111', 'cristi@email.com');
-```
+-- INSERT implicit
+INSERT INTO Clienti VALUES (NULL, 'Cristi', '1980101223344', '0724000000', 'vasile@email.com');
 
-**INSERT explicite:**
-```sql
-INSERT INTO Clienti (nume, cnp, telefon, email) VALUES ('Trif Cristian', '1234567890123', '0721111111', 'cristi@email.com');
-```
+-- INSERT explicit
+INSERT INTO Clienti (nume, telefon, email, cnp) 
+VALUES ('Vasile Pop', '0724000000', 'vasile@email.com', '1980101223344');
 
-**UPDATE:**
-```sql
-UPDATE Clienti SET telefon = '0720000000' WHERE nume = 'Trif Cristian';
-```
+-- UPDATE
+UPDATE Clienti SET email = 'gina@yahoo.com' WHERE nume = 'Gina';
 
-**DELETE:**
-```sql
-DELETE FROM Reparatii WHERE cost < 100;
-```
+-- DELETE
+DELETE FROM Clienti WHERE nume = 'Denisa';
 
 ---
 
 ### DQL (Data Query Language)
 
-```sql
+-- SELECT simplu
 SELECT * FROM Clienti;
-SELECT nume, telefon FROM Clienti WHERE nume LIKE 'T%';
-SELECT * FROM Masini WHERE an_fabricatie > 2015 AND marca = 'Dacia';
-```
 
-**JOIN-uri:**
-```sql
-SELECT c.nume, m.marca, r.descriere
-FROM Clienti c
-JOIN Masini m ON c.id_client = m.id_client
-JOIN Reparatii r ON m.id_masina = r.id_masina;
-```
+-- SELECT coloane
+SELECT nume, email FROM Clienti;
 
-**AGREGARE + GROUP BY + HAVING:**
-```sql
-SELECT id_client, COUNT(*) AS nr_masini
-FROM Masini
-GROUP BY id_client
-HAVING COUNT(*) > 1;
-```
+-- WHERE + LIKE
+SELECT * FROM Clienti WHERE email LIKE '%gmail.com';
 
-**SUBQUERY:**
-```sql
-SELECT nume FROM Clienti
-WHERE id_client IN (
-  SELECT id_client FROM Masini WHERE marca = 'Dacia'
-);
-```
+-- WHERE + AND + OR
+SELECT * FROM Clienti WHERE email LIKE '%gmail.com' AND telefon LIKE '07%';
+SELECT * FROM Clienti WHERE email LIKE '%yahoo.com' OR telefon LIKE '07%';
+
+-- ORDER BY + LIMIT
+SELECT * FROM Piese ORDER BY pret DESC LIMIT 2;
+
+-- GROUP BY + HAVING
+SELECT id_masina, COUNT(*) AS nr_reparatii FROM Reparatii GROUP BY id_masina HAVING nr_reparatii > 1;
 
 ---
 
