@@ -9,11 +9,10 @@ Auto Repair Workshop Management
 MySQL Workbench
 
 ## Database description:
+
 This database simulates the management of an auto repair workshop. It stores information about clients, their vehicles, the repairs performed, parts used in those repairs, and the mechanics involved. It also tracks the permits of the mechanics.
 
 ## Database Schema:
-
-## Database Schema
 
 You can find below the database schema that was generated through Reverse Engineer and which contains all the tables and the relationships between them.
 
@@ -37,7 +36,7 @@ These relationships were implemented using the following primary and foreign key
 
 ### DDL (Data Definition Language)
 
-In order to define the structure of the database, I used the following DDL commands:
+--The following instructions were written in the scope of CREATING the structure of the database (CREATE INSTRUCTIONS):
 
 ```sql
 CREATE DATABASE  atelierauto;
@@ -101,32 +100,90 @@ CREATE TABLE Permise (
     tip_permis VARCHAR(50),
     FOREIGN KEY (id_mecanic) REFERENCES Mecanici(id_mecanic)
 );
+
+After the database and the tables were created, I used a few additional DDL commands to manage and clean specific tables.  
+These included `DROP COLUMN` to remove unnecessary fields and `TRUNCATE` to quickly delete all data from a table while keeping its structure intact, as described below:
+
+```sql
+TRUNCATE TABLE Mecanici;
+
+ALTER TABLE Clienti DROP COLUMN adresa;
+
+
+
 ```
 
-Other DDL operations used:
+After the database and the tables have been created, a few ALTER instructions were written in order to update the structure of the database, as described below:
 
 ```sql
 ALTER TABLE Clienti ADD cnp CHAR(13);
-DROP TABLE IF EXISTS Test;
-TRUNCATE TABLE Reparatii;
+ALTER TABLE Permise RENAME TO Permise_Mecanici;
+ALTER TABLE Clienti ADD COLUMN data_inregistrare DATE;
+ALTER TABLE Clienti DROP COLUMN data_inregistrare;
+ALTER TABLE Masini ADD COLUMN culoare_masinii VARCHAR(20);
+ALTER TABLE Masini CHANGE culoare_masinii culoare VARCHAR(30);
+ALTER TABLE Piese MODIFY COLUMN id_piesa INT AUTO_INCREMENT;
+ALTER TABLE Reparatii ADD COLUMN descriere_reparatii VARCHAR(20);
+ALTER TABLE Reparatii MODIFY COLUMN descriere_reparatii VARCHAR(20) AFTER id_masina;
+ALTER TABLE Piese ADD COLUMN stoc INT;
+
 ```
 
 ### DML (Data Manipulation Language)
 
-In order to populate the database with data and manipulate it, I used the following DML commands:
+  In order to be able to use the database I populated the tables with various data necessary in order to perform queries and manipulate the data. 
+  In the testing process, this necessary data is identified in the Test Design phase and created in the Test Implementation phase.
 
 ```sql
 INSERT INTO Clienti (nume, telefon, email, cnp) VALUES ('Marcel Popescu', '0722000000', 'marcel@email.com', '1980101223344');
+
 INSERT INTO Masini (id_client, marca, model) VALUES (1, 'Dacia', 'Logan');
+
 INSERT INTO Reparatii (id_masina, descriere, cost) VALUES (1, 'Schimb ulei', 200.00);
+
 INSERT INTO Piese (nume_piesa, stoc) VALUES ('Filtru ulei', 10);
+
 INSERT INTO Reparatii_Piese (id_reparatie, id_piesa) VALUES (1, 1);
+
 INSERT INTO Mecanici (nume, specializare) VALUES ('Ion Ionescu', 'Electrician');
+
 INSERT INTO Mecanici_Reparatii (id_mecanic, id_reparatie) VALUES (1, 1);
+
 INSERT INTO Permise (id_mecanic, tip_permis) VALUES (1, 'B');
 
+INSERT INTO Clienti VALUES (5, 'Ana Radu', 'ana@email.com', '0733111222', '2871010112233');
+
+INSERT INTO Piese (nume_piesa, stoc)
+VALUES 
+  ('Ulei motor', 15),
+  ('Bec far', 30),
+  ('Plăcuțe frână', 20);
+
+--After the insert, in order to prepare the data to be better suited for the testing process, I updated some data in the following way:
+
+UPDATE Clienti
+SET telefon = '0744000111'
+WHERE id_client = 1;
+
+UPDATE Reparatii
+SET descriere = 'Schimb ulei + filtru'
+WHERE descriere = 'Schimb ulei';
+
+UPDATE Mecanici
+SET specializare = 'Diagnoză electrică'
+WHERE nume = 'Ion Ionescu';
+
 UPDATE Piese SET stoc = 9 WHERE id_piesa = 1;
-DELETE FROM Clienti WHERE id_client = 10;
+
+--After the testing process, I deleted the data that was no longer relevant in order to preserve the database clean: 
+
+DELETE FROM Clienti
+WHERE nume = 'Denisa';
+
+DELETE FROM Piese
+WHERE nume_piesa = 'Plăcuțe frână';
+
+
 ```
 
 ### DQL (Data Query Language)
@@ -134,28 +191,69 @@ DELETE FROM Clienti WHERE id_client = 10;
 In order to simulate various scenarios that might happen in real life I created the following queries that would cover multiple potential real-life situations:
 
 ```sql
-SELECT * FROM Clienti;
-SELECT nume, email FROM Clienti WHERE telefon LIKE '072%';
-SELECT * FROM Reparatii WHERE cost > 100 AND cost < 500;
-SELECT marca, model FROM Masini ORDER BY marca DESC LIMIT 5;
+-- WHERE
+SELECT * FROM Clienti
+WHERE nume = 'Gina';
 
-SELECT id_masina, COUNT(*) AS nr_reparatii FROM Reparatii GROUP BY id_masina HAVING COUNT(*) > 2;
+-- AND
+SELECT * FROM Clienti
+WHERE email LIKE '%gmail.com' AND telefon LIKE '07%';
 
-SELECT c.nume, m.marca, r.descriere
+-- OR
+SELECT * FROM Clienti
+WHERE email LIKE '%yahoo.com' OR telefon LIKE '07%';
+
+-- LIKE
+SELECT * FROM Clienti
+WHERE email LIKE '%gmail.com';
+
+SELECT * FROM Clienti
+WHERE email LIKE '%yahoo.com' OR telefon LIKE '07%';
+
+-- NOT (completare recomandată)
+SELECT * FROM Clienti
+WHERE NOT email LIKE '%icloud.com';
+
+-- INNER JOIN
+SELECT c.nume, m.marca, m.model, r.descriere, r.cost
 FROM Clienti c
-JOIN Masini m ON c.id_client = m.id_client
-JOIN Reparatii r ON m.id_masina = r.id_masina;
+INNER JOIN Masini m ON c.id_client = m.id_client
+INNER JOIN Reparatii r ON m.id_masina = r.id_masina;
 
-SELECT nume FROM Clienti WHERE id_client IN (SELECT id_client FROM Masini WHERE marca = 'Dacia');
+-- LEFT JOIN
+SELECT c.nume, m.marca
+FROM Clienti c
+LEFT JOIN Masini m ON c.id_client = m.id_client;
+
+-- RIGHT JOIN
+SELECT c.nume, m.marca
+FROM Clienti c
+RIGHT JOIN Masini m ON c.id_client = m.id_client;
+
+-- CROSS JOIN 
+SELECT c.nume, p.nume_piesa
+FROM Clienti c
+CROSS JOIN Piese p;
+
+-- COUNT + GROUP BY
+SELECT id_masina, COUNT(*) AS nr_reparatii
+FROM Reparatii
+GROUP BY id_masina;
+
+-- HAVING
+SELECT id_masina, COUNT(*) AS nr_reparatii
+FROM Reparatii
+GROUP BY id_masina
+HAVING nr_reparatii > 1;
+
+-- SUBQUERY
+SELECT * FROM Clienti
+WHERE id_client IN (
+  SELECT id_client FROM Masini WHERE marca = 'Dacia'
+);
+
 ```
 
-## Relationships
-
-In the current project I used and demonstrated the following types of relationships:
-
-- One-to-One: `Mecanici` ↔ `Permise`
-- One-to-Many: `Clienti` → `Masini`, `Masini` → `Reparatii`
-- Many-to-Many: `Reparatii` ↔ `Piese`, `Mecanici` ↔ `Reparatii`
 
 ## Conclusion
 
