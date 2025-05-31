@@ -13,14 +13,25 @@ This database simulates the management of an auto repair workshop. It stores inf
 
 ## Database Schema:
 
+## Database Schema
+
 You can find below the database schema that was generated through Reverse Engineer and which contains all the tables and the relationships between them.
 
 The tables are connected in the following way:
-- Clienti is connected with Masini through a one-to-many relationship.
-- Masini is connected with Reparatii through a one-to-many relationship.
-- Reparatii is connected with Piese through a many-to-many relationship via the Reparatii_Piese table.
-- Mecanici is connected with Reparatii through a many-to-many relationship via the Mecanici_Reparatii table.
-- Mecanici is connected with Permise through a one-to-one relationship.
+- **Clienti** is connected with **Masini** through a one-to-many relationship.
+- **Masini** is connected with **Reparatii** through a one-to-many relationship.
+- **Reparatii** is connected with **Piese** through a many-to-many relationship via the **Reparatii_Piese** table.
+- **Reparatii** is connected with **Mecanici** through a many-to-many relationship via the **Mecanici_Reparatii** table.
+- **Mecanici** is connected with **Permise** through a one-to-one relationship.
+
+These relationships were implemented using the following primary and foreign keys:
+- **Clienti.id_client** as a primary key and **Masini.id_client** as a foreign key.
+- **Masini.id_masina** as a primary key and **Reparatii.id_masina** as a foreign key.
+- **Reparatii.id_reparatie** as a primary key and **Reparatii_Piese.id_reparatie** as a foreign key.
+- **Piese.id_piesa** as a primary key and **Reparatii_Piese.id_piesa** as a foreign key.
+- **Reparatii.id_reparatie** as a primary key and **Mecanici_Reparatii.id_reparatie** as a foreign key.
+- **Mecanici.id_mecanic** as a primary key and **Mecanici_Reparatii.id_mecanic** as a foreign key.
+- **Mecanici.id_mecanic** as a primary key and **Permise.id_mecanic** as a foreign key.
 
 ## SQL Commands
 
@@ -29,6 +40,9 @@ The tables are connected in the following way:
 In order to define the structure of the database, I used the following DDL commands:
 
 ```sql
+CREATE DATABASE  atelierauto;
+    USE atelierauto;
+
 CREATE TABLE Clienti (
     id_client INT PRIMARY KEY AUTO_INCREMENT,
     nume VARCHAR(100),
